@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import OnboardingForm from "@/components/onboarding/OnboardingForm"
-import Step1Fields from "@/components/onboarding/steps/step1"
+import Step1Fields from "@/components/onboarding/steps/Step1"
 import ChakraProvider from "@/components/providers/ChakraProvider"
 import { step1Schema } from "@/lib/validation/schemas"
 import {

@@ -1,7 +1,7 @@
 import { UseFormSetError } from "react-hook-form"
 import { BUSINESS_DETAILS } from "./constants"
 import { step1Schema, type Step1Values } from "@/lib/validation/schemas"
-import Step1Fields from "@/components/onboarding/steps/step1"
+import Step1Fields from "@/components/onboarding/steps/Step1"
 import {
   submitStep1,
   validateCorporationNumber,

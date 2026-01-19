@@ -1,11 +1,8 @@
-<<<<<<< HEAD
-# venn-take-home-arman-jan-2026
-Venn's take home assignment
-=======
 # Venn Onboarding
 
-This project implements Step 1 of a multi-step onboarding flow using Next.js App Router, React Hook Form, and Zod. The UI is extensible for steps 2-5, with only step 1 implemented today.
-
+This project implements Step 1 of a multi-step onboarding flow using Next.js App Router, React Hook Form, and Zod.
+Thank you to the team for the consideration, I really enjoyed working on this it was a nice challenge with lots of nuance.
+I first started by going 
 ## Getting Started
 
 ### Prerequisites
@@ -76,4 +73,3 @@ Integration tests use React Testing Library and mock server actions.
 ```bash
 npm run test
 ```
->>>>>>> origin/master
