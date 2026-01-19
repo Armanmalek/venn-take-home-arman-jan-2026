@@ -1,18 +1,45 @@
-export type OnboardingStep = {
-  id: number;
-  title: string;
-  description?: string;
-};
+import { UseFormSetError } from "react-hook-form"
+import { BUSINESS_DETAILS } from "./constants"
+import { step1Schema, type Step1Values } from "@/lib/validation/schemas"
+import Step1Fields from "@/components/onboarding/steps/step1"
+import {
+  submitStep1,
+  validateCorporationNumber,
+} from "@/app/onboarding/actions"
 
-export const onboardingSteps: OnboardingStep[] = [
-  { id: 1, title: "Onboarding Form" },
-  { id: 2, title: "Business Details" },
-  { id: 3, title: "Ownership" },
-  { id: 4, title: "Verification" },
-  { id: 5, title: "Review" },
-];
+export const stepRegistry = {
+  [BUSINESS_DETAILS]: {
+    id: 1,
+    title: "Business Details",
+    schema: step1Schema,
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      corporationNumber: "",
+    } satisfies Step1Values,
+    component: Step1Fields,
+    submitAction: submitStep1,
+    asyncValidate: async (
+      values: Step1Values,
+      setError: UseFormSetError<Step1Values>,
+    ) => {
+      const result = await validateCorporationNumber(values.corporationNumber)
+      if (!result.valid) {
+        setError("corporationNumber", {
+          message: "Invalid corporation number",
+        })
+        return false
+      }
+      return true
+    },
+  },
+}
 
-export const TOTAL_STEPS = onboardingSteps.length;
+export type StepRegistryKey = keyof typeof stepRegistry
 
-export const getStep = (stepId: number) =>
-  onboardingSteps.find((step) => step.id === stepId);
+export const isValidStepName = (name: string): name is StepRegistryKey => {
+  return name in stepRegistry
+}
+
+export const TOTAL_STEPS = Object.keys(stepRegistry).length

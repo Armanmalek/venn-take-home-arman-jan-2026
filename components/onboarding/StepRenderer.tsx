@@ -1,33 +1,34 @@
-import OnboardingForm from "@/components/onboarding/OnboardingForm";
-import Step1Fields from "@/components/onboarding/steps/step1";
-import { submitStep1 } from "@/app/onboarding/actions";
-import type { Step1Values } from "@/lib/validation/schemas";
+"use client"
 
-const NOT_IMPLEMENTED_MESSAGE = "Not implemented";
+import OnboardingForm from "@/components/onboarding/OnboardingForm"
+import { stepRegistry, StepRegistryKey } from "@/lib/onboarding/flow"
+import { useOnboarding } from "@/components/providers/OnboardingProvider"
 
 type StepRendererProps = {
-  step: number;
-  defaultValues: Step1Values;
-};
+  stepName: StepRegistryKey
+}
 
-const StepRenderer = ({ step, defaultValues }: StepRendererProps) => {
-  if (step !== 1) {
-    return (
-      <p className="text-center text-sm text-zinc-500">
-        {NOT_IMPLEMENTED_MESSAGE}
-      </p>
-    );
+const StepRenderer = ({ stepName }: StepRendererProps) => {
+  const { getStepState, completeStep } = useOnboarding()
+  const stepState = getStepState(stepName)
+  const stepConfig = stepRegistry[stepName]
+  const FieldsComponent = stepConfig.component
+
+  const handleSubmit = async (values: typeof stepConfig.defaultValues) => {
+    await stepConfig.submitAction(values)
+    completeStep(stepName, values)
   }
 
   return (
     <OnboardingForm
-      schemaKey="step1"
-      defaultValues={defaultValues}
-      onSubmit={submitStep1}
+      schema={stepConfig.schema}
+      defaultValues={stepState.data ?? stepConfig.defaultValues}
+      onSubmit={handleSubmit}
+      asyncValidate={stepConfig.asyncValidate}
     >
-      <Step1Fields />
+      <FieldsComponent />
     </OnboardingForm>
-  );
-};
+  )
+}
 
-export default StepRenderer;
+export default StepRenderer

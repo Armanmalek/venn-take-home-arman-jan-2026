@@ -1,6 +1,7 @@
-import { z } from "zod";
+import { z } from "zod"
+import { parsePhoneNumberWithError } from "libphonenumber-js"
 
-export const phoneRegex = /^\+1\d{10}$/;
+const phoneFormatRegex = /^\+1\d+$/
 
 export const step1Schema = z.object({
   firstName: z
@@ -14,11 +15,24 @@ export const step1Schema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .regex(phoneRegex, "Phone number must start with +1 and include 10 digits"),
+    .regex(phoneFormatRegex, "Phone must start with +1 and contain only digits")
+    .refine(
+      (val) => {
+        try {
+          const phone = parsePhoneNumberWithError(val, "CA")
+          return phone?.isValid() && phone?.country === "CA"
+        } catch {
+          return false
+        }
+      },
+      {
+        message: "Please enter a valid Canadian phone number",
+      },
+    ),
   corporationNumber: z
     .string()
     .min(1, "Corporation number is required")
     .length(9, "Corporation number must be 9 digits"),
-});
+})
 
-export type Step1Values = z.infer<typeof step1Schema>;
+export type Step1Values = z.infer<typeof step1Schema>

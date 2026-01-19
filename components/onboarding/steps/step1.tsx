@@ -1,135 +1,99 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
-import { useCorpNumberValidation } from "@/hooks/useCorpNumberValidation";
-import type { Step1Values } from "@/lib/validation/schemas";
-
-const inputClassName =
-  "mt-2 w-full rounded-2xl border border-zinc-200 px-4 py-3 text-base text-zinc-900 shadow-sm outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100";
+import { useFormContext } from "react-hook-form"
+import { Input, Text, Grid, Field } from "@chakra-ui/react"
+import useValidateCorporationNumber from "@/hooks/useValidateCorporationNumber"
+import type { Step1Values } from "@/lib/validation/schemas"
 
 const Step1Fields = () => {
-  const { isValidating, validate } = useCorpNumberValidation();
+  const { isValidatingCorporationNumber, validateCorporationNumber } =
+    useValidateCorporationNumber()
   const {
     register,
     trigger,
     setError,
     clearErrors,
     formState: { errors },
-  } = useFormContext<Step1Values>();
+  } = useFormContext<Step1Values>()
 
-  const handleCorpBlur = async (value: string) => {
-    const isValid = await trigger("corporationNumber");
+  const handleCorporationBlur = async (
+    event: React.FocusEvent<HTMLInputElement>,
+  ) => {
+    const value = event.target.value
+    const isValid = await trigger("corporationNumber")
     if (!isValid) {
-      return;
+      return
     }
 
-    const result = await validate(value.trim());
+    const result = await validateCorporationNumber(value.trim())
     if (!result.valid) {
       setError("corporationNumber", {
-        type: "server",
-        message: result.message ?? "Invalid corporation number",
-      });
-      return;
+        message: "Invalid corporation number",
+      })
+      return
     }
 
-    clearErrors("corporationNumber");
-  };
+    clearErrors("corporationNumber")
+  }
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <label className="text-sm font-medium text-zinc-700" htmlFor="firstName">
-          First Name
-          <input
-            id="firstName"
+      <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap={6}>
+        <Field.Root invalid={Boolean(errors.firstName)}>
+          <Field.Label>First Name</Field.Label>
+          <Input
             type="text"
             autoComplete="given-name"
-            className={inputClassName}
-            aria-invalid={Boolean(errors.firstName)}
-            aria-describedby={errors.firstName ? "firstName-error" : undefined}
+            borderRadius="lg"
             {...register("firstName")}
           />
-          {errors.firstName && (
-            <p id="firstName-error" className="mt-2 text-sm text-red-500" role="alert">
-              {errors.firstName.message}
-            </p>
-          )}
-        </label>
+          <Field.ErrorText>{errors.firstName?.message}</Field.ErrorText>
+        </Field.Root>
 
-        <label className="text-sm font-medium text-zinc-700" htmlFor="lastName">
-          Last Name
-          <input
-            id="lastName"
+        <Field.Root invalid={Boolean(errors.lastName)}>
+          <Field.Label>Last Name</Field.Label>
+          <Input
             type="text"
             autoComplete="family-name"
-            className={inputClassName}
-            aria-invalid={Boolean(errors.lastName)}
-            aria-describedby={errors.lastName ? "lastName-error" : undefined}
+            borderRadius="lg"
             {...register("lastName")}
           />
-          {errors.lastName && (
-            <p id="lastName-error" className="mt-2 text-sm text-red-500" role="alert">
-              {errors.lastName.message}
-            </p>
-          )}
-        </label>
-      </div>
+          <Field.ErrorText>{errors.lastName?.message}</Field.ErrorText>
+        </Field.Root>
+      </Grid>
 
-      <label className="mt-6 block text-sm font-medium text-zinc-700" htmlFor="phone">
-        Phone Number
-        <input
-          id="phone"
+      <Field.Root invalid={Boolean(errors.phone)} mt={6}>
+        <Field.Label>Phone Number</Field.Label>
+        <Input
           type="tel"
           autoComplete="tel"
           placeholder="+1XXXXXXXXXX"
-          className={inputClassName}
-          aria-invalid={Boolean(errors.phone)}
-          aria-describedby={errors.phone ? "phone-error" : undefined}
+          borderRadius="lg"
           {...register("phone")}
         />
-        {errors.phone && (
-          <p id="phone-error" className="mt-2 text-sm text-red-500" role="alert">
-            {errors.phone.message}
-          </p>
-        )}
-      </label>
+        <Field.ErrorText>{errors.phone?.message}</Field.ErrorText>
+      </Field.Root>
 
-      <label
-        className="mt-6 block text-sm font-medium text-zinc-700"
-        htmlFor="corporationNumber"
-      >
-        Corporation Number
-        <input
-          id="corporationNumber"
+      <Field.Root invalid={Boolean(errors.corporationNumber)} mt={6}>
+        <Field.Label>Corporation Number</Field.Label>
+        <Input
           type="text"
           inputMode="numeric"
           maxLength={9}
-          className={inputClassName}
-          aria-invalid={Boolean(errors.corporationNumber)}
-          aria-describedby={
-            errors.corporationNumber ? "corporationNumber-error" : undefined
-          }
+          borderRadius="lg"
           {...register("corporationNumber", {
-            onBlur: async (event) => {
-              await handleCorpBlur(event.target.value);
-            },
+            onBlur: handleCorporationBlur,
           })}
         />
-        {isValidating && (
-          <p className="mt-2 text-sm text-zinc-500">Validating...</p>
+        {isValidatingCorporationNumber && (
+          <Text mt={2} fontSize="sm" color="gray.500">
+            Validating...
+          </Text>
         )}
-        {errors.corporationNumber && (
-          <p
-            id="corporationNumber-error"
-            className="mt-2 text-sm text-red-500"
-            role="alert"
-          >
-            {errors.corporationNumber.message}
-          </p>
-        )}
-      </label>
+        <Field.ErrorText>{errors.corporationNumber?.message}</Field.ErrorText>
+      </Field.Root>
     </>
-  );
-};
+  )
+}
 
-export default Step1Fields;
+export default Step1Fields

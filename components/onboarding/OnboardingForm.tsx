@@ -1,96 +1,99 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
-import { useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { saveDraft } from "@/app/onboarding/actions";
-import { step1Schema, type Step1Values } from "@/lib/validation/schemas";
+import type { ReactNode } from "react"
+import { useState } from "react"
+import {
+  FormProvider,
+  useForm,
+  FieldValues,
+  DefaultValues,
+  UseFormSetError,
+} from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Button, Alert } from "@chakra-ui/react"
+import type { ZodSchema } from "zod"
 
-const schemaMap = {
-  step1: step1Schema,
-};
+type OnboardingFormProps<T extends FieldValues> = {
+  schema: ZodSchema<T>
+  defaultValues: DefaultValues<T>
+  onSubmit: (values: T) => Promise<void>
+  asyncValidate?: (values: T, setError: UseFormSetError<T>) => Promise<boolean>
+  children: ReactNode
+}
 
-type SchemaKey = keyof typeof schemaMap;
-
-type OnboardingFormProps = {
-  schemaKey: SchemaKey;
-  defaultValues: Step1Values;
-  onSubmit: (values: Step1Values) => Promise<void>;
-  children: ReactNode;
-};
-
-const OnboardingForm = ({
-  schemaKey,
+const OnboardingForm = <T extends FieldValues>({
+  schema,
   defaultValues,
   onSubmit,
+  asyncValidate,
   children,
-}: OnboardingFormProps) => {
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+}: OnboardingFormProps<T>) => {
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  const methods = useForm<Step1Values>({
-    resolver: zodResolver(schemaMap[schemaKey]),
+  const methods = useForm<T>({
+    resolver: zodResolver(schema),
     mode: "onBlur",
     reValidateMode: "onBlur",
     defaultValues,
-  });
+  })
 
-  const handleSubmit = async (values: Step1Values) => {
-    setSubmitError(null);
-    setSubmitSuccess(false);
+  const handleSubmit = async (values: T) => {
+    setSubmitError(null)
+    setSubmitSuccess(false)
+
+    if (asyncValidate) {
+      const isValid = await asyncValidate(values, methods.setError)
+      if (!isValid) return
+    }
 
     try {
-      await onSubmit(values);
-      setSubmitSuccess(true);
+      await onSubmit(values)
+      setSubmitSuccess(true)
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Submission failed";
-      setSubmitError(message);
+        error instanceof Error ? error.message : "Submission failed"
+      setSubmitError(message)
     }
-  };
-
-  const handleDraftBlur = () => {
-    void saveDraft(methods.getValues());
-  };
+  }
 
   return (
     <FormProvider {...methods}>
-      <form
-        onSubmit={methods.handleSubmit(handleSubmit)}
-        onBlur={handleDraftBlur}
-        noValidate
-      >
+      <form onSubmit={methods.handleSubmit(handleSubmit)} noValidate>
         {children}
 
         {submitError && (
-          <div
-            role="alert"
-            className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
-          >
-            {submitError}
-          </div>
+          <Alert.Root status="error" mt={6} borderRadius="2xl">
+            <Alert.Indicator />
+            <Alert.Title>{submitError}</Alert.Title>
+          </Alert.Root>
         )}
 
         {submitSuccess && (
-          <div
-            role="status"
-            className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600"
-          >
-            Submitted successfully.
-          </div>
+          <Alert.Root status="success" mt={6} borderRadius="2xl">
+            <Alert.Indicator />
+            <Alert.Title>Submitted successfully.</Alert.Title>
+          </Alert.Root>
         )}
 
-        <button
+        <Button
           type="submit"
-          disabled={methods.formState.isSubmitting}
-          className="mt-8 flex w-full items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+          onMouseDown={(e) => {
+            // Prevent default to avoid double submission 
+            e.preventDefault()
+            methods.handleSubmit(handleSubmit)()
+          }}
+          loading={methods.formState.isSubmitting}
+          loadingText="Submitting"
+          w="full"
+          mt={8}
+          borderRadius="lg"
         >
-          {methods.formState.isSubmitting ? "Submitting" : "Submit"}
-        </button>
+          Submit
+        </Button>
       </form>
     </FormProvider>
-  );
-};
+  )
+}
 
-export default OnboardingForm;
+export default OnboardingForm
